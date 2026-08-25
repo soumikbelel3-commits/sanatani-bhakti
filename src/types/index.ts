@@ -10,7 +10,6 @@ export interface Mantra {
   meaning: string;
   meaningHindi: string;
   benefits: string;
-  isPremium?: boolean;
 }
 
 export interface Aarti {
@@ -19,7 +18,6 @@ export interface Aarti {
   deity: DeityId;
   lyrics: string[];
   meaning?: string;
-  isPremium?: boolean;
 }
 
 export interface Chalisa {
@@ -28,7 +26,6 @@ export interface Chalisa {
   deity: DeityId;
   doha: string[];
   chaupai: string[];
-  isPremium?: boolean;
 }
 
 export interface Bhajan {
@@ -36,7 +33,6 @@ export interface Bhajan {
   title: string;
   deity: DeityId;
   lyrics: string[];
-  isPremium?: boolean;
 }
 
 export interface PujaStep {
@@ -53,7 +49,6 @@ export interface PujaGuide {
   duration: string;
   samagri: string[];
   steps: PujaStep[];
-  isPremium?: boolean;
 }
 
 export interface Scripture {
@@ -62,7 +57,6 @@ export interface Scripture {
   category: 'gita' | 'ramayan' | 'puran' | 'stotra' | 'katha';
   chapters?: number;
   excerpt: string;
-  isPremium?: boolean;
 }
 
 export interface Wallpaper {
@@ -70,7 +64,6 @@ export interface Wallpaper {
   title: string;
   deity: DeityId;
   gradient: [string, string];
-  isPremium?: boolean;
 }
 
 export interface DailyStatus {

@@ -7,14 +7,13 @@ import { BHAJANS, getBhajanById } from '../data/bhajans';
 import { CHALISAS, getChalisaById } from '../data/chalisas';
 
 export function ChalisaListScreen() {
-  const { navigate, isPremium } = useApp();
+  const { navigate } = useApp();
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       {CHALISAS.map((c) => (
         <Card key={c.id} onPress={() => navigate('chalisa-detail', { id: c.id })}>
           <View style={styles.row}>
             <Text style={styles.title}>{c.title}</Text>
-            {c.isPremium && !isPremium && <Text style={styles.pro}>PRO</Text>}
           </View>
         </Card>
       ))}
@@ -23,17 +22,9 @@ export function ChalisaListScreen() {
 }
 
 export function ChalisaDetailScreen() {
-  const { nav, isPremium, navigate } = useApp();
+  const { nav } = useApp();
   const chalisa = nav.params?.id ? getChalisaById(nav.params.id) : undefined;
   if (!chalisa) return <Text>Not found</Text>;
-  if (chalisa.isPremium && !isPremium) {
-    return (
-      <View style={styles.locked}>
-        <Text style={styles.lockText}>🔒 VIP required for {chalisa.title}</Text>
-        <Pressable style={styles.upgrade} onPress={() => navigate('premium')}><Text style={styles.upgradeText}>Upgrade</Text></Pressable>
-      </View>
-    );
-  }
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <Text style={styles.header}>{chalisa.title}</Text>

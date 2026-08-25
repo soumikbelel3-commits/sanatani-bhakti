@@ -79,7 +79,6 @@ export const PUJA_GUIDES: PujaGuide[] = [
       { order: 4, title: 'Durga Invocation', description: 'Invoke Maa Durga for nine days of worship.' },
       { order: 5, title: 'Daily Deepak', description: 'Light akhand jyot or daily diya for all 9 days.' },
     ],
-    isPremium: true,
   },
   {
     id: 'daily-morning-puja',

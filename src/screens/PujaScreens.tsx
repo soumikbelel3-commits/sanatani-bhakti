@@ -22,20 +22,12 @@ export function PujaListScreen() {
 }
 
 export function PujaDetailScreen() {
-  const { nav, addPunya, isPremium, navigate } = useApp();
+  const { nav, addPunya } = useApp();
   const puja = nav.params?.id ? getPujaById(nav.params.id) : undefined;
   const [checked, setChecked] = useState<Record<number, boolean>>({});
   const [samagriChecked, setSamagriChecked] = useState<Record<number, boolean>>({});
 
   if (!puja) return <Text>Not found</Text>;
-  if (puja.isPremium && !isPremium) {
-    return (
-      <View style={styles.locked}>
-        <Text>🔒 Premium Puja Guide</Text>
-        <Pressable style={styles.upgrade} onPress={() => navigate('premium')}><Text style={styles.upgradeText}>Upgrade</Text></Pressable>
-      </View>
-    );
-  }
 
   const toggleStep = (order: number) => {
     setChecked((prev) => {

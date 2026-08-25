@@ -42,14 +42,12 @@ export const BHAJANS: Bhajan[] = [
     title: 'Om Jai Lakshmi Mata',
     deity: 'lakshmi',
     lyrics: ['ॐ जय लक्ष्मी माता, मैया जय लक्ष्मी माता'],
-    isPremium: true,
   },
   {
     id: 'shiv-tandav',
     title: 'Shiv Tandav Stotra (Excerpt)',
     deity: 'shiv',
     lyrics: ['जटाटवी गलज्जल प्रवाह पावितस्थले', 'गलेऽवलम्ब्य लम्बितां भुजंगतुंगमालिकाम्'],
-    isPremium: true,
   },
 ];
 

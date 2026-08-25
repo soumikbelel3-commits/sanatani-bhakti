@@ -38,11 +38,9 @@ export type TranslationKey =
   | 'dayStreak'
   | 'totalJaaps'
   | 'favorites'
-  | 'upgradeVip'
-  | 'vipMember'
   | 'myFavorites'
   | 'account'
-  | 'shareWhatsApp'
+  | 'shareStatus'
   | 'shareHint'
   | 'luckyColor'
   | 'luckyNumber'
@@ -73,15 +71,47 @@ export type TranslationKey =
   | 'aarti'
   | 'chalisa'
   | 'bhajan'
-  | 'vipBenefits'
   | 'adFree'
-  | 'fullLibrary'
-  | 'bhagwaTick'
-  | 'storeDiscount';
+  | 'removeAds'
+  | 'removeAdsSub'
+  | 'removeAdsCta'
+  | 'restorePurchase'
+  | 'purchaseThanks'
+  | 'alreadyAdFree'
+  | 'privacyOptions'
+  | 'supportApp'
+  | 'saveToGallery'
+  | 'setAsWallpaper'
+  | 'savedToGallery'
+  | 'saveFailed'
+  | 'ringtoneSaved'
+  | 'openSoundSettings'
+  | 'pause'
+  | 'loadingLabel'
+  | 'unavailable'
+  | 'allContentFree';
 
 type Translations = Record<TranslationKey, string>;
 
 const hi: Translations = {
+  allContentFree: 'सभी मंत्र, चालीसा और आरती हमेशा नि:शुल्क',
+  removeAds: 'विज्ञापन हटाएँ',
+  removeAdsSub: 'एक बार भुगतान करें, हमेशा के लिए विज्ञापन-मुक्त',
+  removeAdsCta: 'विज्ञापन हटाएँ',
+  restorePurchase: 'खरीद पुनर्स्थापित करें',
+  purchaseThanks: 'धन्यवाद! अब कोई विज्ञापन नहीं दिखेगा।',
+  alreadyAdFree: 'आपका ऐप विज्ञापन-मुक्त है',
+  privacyOptions: 'विज्ञापन गोपनीयता सेटिंग्स',
+  supportApp: 'ऐप का समर्थन करें',
+  saveToGallery: 'गैलरी में सहेजें',
+  setAsWallpaper: 'वॉलपेपर सेट करें',
+  savedToGallery: 'गैलरी में सहेजा गया',
+  saveFailed: 'सहेजने में विफल',
+  ringtoneSaved: 'रिंगटोन डिवाइस में सहेजी गई',
+  openSoundSettings: 'ध्वनि सेटिंग्स खोलें',
+  pause: 'रोकें',
+  loadingLabel: 'लोड हो रहा है…',
+  unavailable: 'अभी उपलब्ध नहीं',
   appName: 'सनातनी भक्ति',
   appTagline: 'आपका दैनिक भक्ति साथी',
   chooseLanguage: 'अपनी भाषा चुनें',
@@ -119,11 +149,9 @@ const hi: Translations = {
   dayStreak: 'दिन स्ट्रीक',
   totalJaaps: 'कुल जाप',
   favorites: 'पसंदीदा',
-  upgradeVip: 'VIP अपग्रेड करें',
-  vipMember: 'VIP सदस्य',
   myFavorites: 'मेरे पसंदीदा',
   account: 'खाता',
-  shareWhatsApp: 'व्हाट्सऐप पर शेयर करें',
+  shareStatus: 'शेयर करें',
   shareHint: 'भक्ति फैलाएँ — शेयर करने पर +5 पुण्य',
   luckyColor: 'शुभ रंग',
   luckyNumber: 'शुभ अंक',
@@ -154,14 +182,28 @@ const hi: Translations = {
   aarti: 'आरती',
   chalisa: 'चालीसा',
   bhajan: 'भजन',
-  vipBenefits: 'VIP लाभ',
   adFree: 'विज्ञापन-मुक्त प्रार्थना',
-  fullLibrary: 'पूरी मंत्र और चालीसा लाइब्रेरी',
-  bhagwaTick: 'प्रमाणित भगवा टिक',
-  storeDiscount: 'स्टोर पर 10% छूट',
 };
 
 const en: Translations = {
+  allContentFree: 'All mantras, chalisa and aarti are free, always',
+  removeAds: 'Remove Ads',
+  removeAdsSub: 'One-time payment. No ads, ever again.',
+  removeAdsCta: 'Remove Ads',
+  restorePurchase: 'Restore purchase',
+  purchaseThanks: 'Thank you! Ads are now removed.',
+  alreadyAdFree: 'Your app is ad-free',
+  privacyOptions: 'Ad privacy settings',
+  supportApp: 'Support the app',
+  saveToGallery: 'Save to gallery',
+  setAsWallpaper: 'Set as wallpaper',
+  savedToGallery: 'Saved to your gallery',
+  saveFailed: 'Could not save',
+  ringtoneSaved: 'Ringtone saved to your device',
+  openSoundSettings: 'Open sound settings',
+  pause: 'Pause',
+  loadingLabel: 'Loading…',
+  unavailable: 'Not available yet',
   appName: 'Sanatani Bhakti',
   appTagline: 'Your daily devotional companion',
   chooseLanguage: 'Choose Your Language',
@@ -199,11 +241,9 @@ const en: Translations = {
   dayStreak: 'Day Streak',
   totalJaaps: 'Total Jaaps',
   favorites: 'Favorites',
-  upgradeVip: 'Upgrade to VIP',
-  vipMember: 'VIP Member',
   myFavorites: 'My Favorites',
   account: 'Account',
-  shareWhatsApp: 'Share on WhatsApp',
+  shareStatus: 'Share',
   shareHint: 'Spread devotion — +5 Punya for sharing',
   luckyColor: 'Lucky color',
   luckyNumber: 'Lucky number',
@@ -234,11 +274,7 @@ const en: Translations = {
   aarti: 'Aarti',
   chalisa: 'Chalisa',
   bhajan: 'Bhajan',
-  vipBenefits: 'VIP Benefits',
   adFree: 'Ad-free prayer experience',
-  fullLibrary: 'Full mantra & chalisa library',
-  bhagwaTick: 'Authenticated Bhagwa Tick',
-  storeDiscount: '10% off Sanatan Store',
 };
 
 const ta: Translations = {
@@ -274,7 +310,7 @@ const ta: Translations = {
   punyaPoints: 'புண்ய புள்ளிகள்',
   dayStreak: 'நாள் தொடர்',
   totalJaaps: 'மொத்த ஜபம்',
-  shareWhatsApp: 'வாட்ஸ்அப்பில் பகிரவும்',
+  shareStatus: 'பகிரவும்',
   lightDiya: 'தீபம் ஏற்றுங்கள்',
   offerFlower: 'மலர் சமர்ப்பிக்கவும்',
   ringBell: 'மணி அடிக்கவும்',
@@ -314,7 +350,7 @@ const te: Translations = {
   punyaPoints: 'పుణ్య పాయింట్లు',
   dayStreak: 'రోజు స్ట్రీక్',
   totalJaaps: 'మొత్తం జపాలు',
-  shareWhatsApp: 'వాట్సాప్‌లో షేర్ చేయండి',
+  shareStatus: 'షేర్ చేయండి',
   lightDiya: 'దీపం వెలిగించు',
   offerFlower: 'పువ్వు అర్పించు',
   ringBell: 'గంట మోగించు',
@@ -354,7 +390,7 @@ const mr: Translations = {
   punyaPoints: 'पुण्य गुण',
   dayStreak: 'दिवस मालिका',
   totalJaaps: 'एकूण जप',
-  shareWhatsApp: 'व्हॉट्सअॅपवर शेअर करा',
+  shareStatus: 'शेअर करा',
   lightDiya: 'दीप जला',
   offerFlower: 'फूल अर्पण करा',
   ringBell: 'घंटा वाजवा',
@@ -394,7 +430,7 @@ const gu: Translations = {
   punyaPoints: 'પુણ્ય અંક',
   dayStreak: 'દિવસ સ્ટ્રીક',
   totalJaaps: 'કુલ જાપ',
-  shareWhatsApp: 'વોટ્સએપ પર શેર કરો',
+  shareStatus: 'શેર કરો',
   lightDiya: 'દીવો પ્રગટાવો',
   offerFlower: 'ફૂલ અર્પણ કરો',
   ringBell: 'ઘંટડી વગાડો',
@@ -434,7 +470,7 @@ const bn: Translations = {
   punyaPoints: 'পুণ্য পয়েন্ট',
   dayStreak: 'দিন স্ট্রিক',
   totalJaaps: 'মোট জপ',
-  shareWhatsApp: 'হোয়াটসঅ্যাপে শেয়ার করুন',
+  shareStatus: 'শেয়ার করুন',
   lightDiya: 'দীপ জ্বালান',
   offerFlower: 'ফুল অর্পণ করুন',
   ringBell: 'ঘণ্টা বাজান',
@@ -474,7 +510,7 @@ const kn: Translations = {
   punyaPoints: 'ಪುಣ್ಯ ಅಂಕಗಳು',
   dayStreak: 'ದಿನ ಸ್ಟ್ರೀಕ್',
   totalJaaps: 'ಒಟ್ಟು ಜಪಗಳು',
-  shareWhatsApp: 'ವಾಟ್ಸಾಪ್‌ನಲ್ಲಿ ಹಂಚಿಕೊಳ್ಳಿ',
+  shareStatus: 'ಹಂಚಿಕೊಳ್ಳಿ',
   lightDiya: 'ದೀಪ ಹಚ್ಚಿ',
   offerFlower: 'ಹೂವು ಅರ್ಪಿಸಿ',
   ringBell: 'ಗಂಟೆ ಬಾರಿಸಿ',
@@ -514,7 +550,7 @@ const ml: Translations = {
   punyaPoints: 'പുണ്യ പോയിന്റുകൾ',
   dayStreak: 'ദിവസ സ്ട്രീക്ക്',
   totalJaaps: 'മൊത്തം ജപങ്ങൾ',
-  shareWhatsApp: 'വാട്ട്സാപ്പിൽ പങ്കിടുക',
+  shareStatus: 'പങ്കിടുക',
   lightDiya: 'ദീപം കത്തിക്കുക',
   offerFlower: 'പുഷ്പം അർപ്പിക്കുക',
   ringBell: 'മണി മുഴക്കുക',
@@ -554,7 +590,7 @@ const pa: Translations = {
   punyaPoints: 'ਪੁੰਨ ਅੰਕ',
   dayStreak: 'ਦਿਨ ਸਟ੍ਰੀਕ',
   totalJaaps: 'ਕੁੱਲ ਜਾਪ',
-  shareWhatsApp: 'ਵਟਸਐਪ ਤੇ ਸ਼ੇਅਰ ਕਰੋ',
+  shareStatus: 'ਸ਼ੇਅਰ ਕਰੋ',
   lightDiya: 'ਦੀਵਾ ਜਗਾਓ',
   offerFlower: 'ਫੁੱਲ ਭੇਟ ਕਰੋ',
   ringBell: 'ਘੰਟੀ ਵਜਾਓ',
@@ -594,7 +630,7 @@ const or: Translations = {
   punyaPoints: 'ପୁଣ୍ୟ ପଏଣ୍ଟ',
   dayStreak: 'ଦିନ ଷ୍ଟ୍ରିକ',
   totalJaaps: 'ମୋଟ ଜପ',
-  shareWhatsApp: 'ୱାଟ୍ସଆପ୍‌ରେ ସେୟାର କରନ୍ତୁ',
+  shareStatus: 'ସେୟାର କରନ୍ତୁ',
   lightDiya: 'ଦୀପ ଜ୍ୱଳନ୍ତୁ',
   offerFlower: 'ଫୁଲ ଅର୍ପଣ କରନ୍ତୁ',
   ringBell: 'ଘଣ୍ଟା ବଜାନ୍ତୁ',

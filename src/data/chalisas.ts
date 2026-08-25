@@ -31,7 +31,6 @@ export const CHALISAS: Chalisa[] = [
       'मैं हूँ दीन दयाल की दासी। करो सदा मैया मोहि राखी ॥',
       'जो नर दुःख में जपे तुम्हारा। सो नर मिटे संकट सारा ॥',
     ],
-    isPremium: true,
   },
   {
     id: 'ganesh-chalisa',
@@ -41,7 +40,6 @@ export const CHALISAS: Chalisa[] = [
     chaupai: [
       'भजत राम सुजान। प्रभु प्रताप तुम राखहु मोहि जान ॥',
     ],
-    isPremium: true,
   },
   {
     id: 'shiv-chalisa',
@@ -51,7 +49,6 @@ export const CHALISAS: Chalisa[] = [
     chaupai: [
       'कहत अयोध्यादास तुम देहु अभय वर। जो सुमिरत शिव संकट दूर कर ॥',
     ],
-    isPremium: true,
   },
   {
     id: 'lakshmi-chalisa',
@@ -59,7 +56,6 @@ export const CHALISAS: Chalisa[] = [
     deity: 'lakshmi',
     doha: ['मातु लक्ष्मी करो कृपा। धन देहु दीन दयाल ॥'],
     chaupai: ['जो यह चालीसा पढ़े सदा। सुख सम्पत्ति पावे अपारा ॥'],
-    isPremium: true,
   },
   {
     id: 'shani-chalisa',
@@ -67,7 +63,6 @@ export const CHALISAS: Chalisa[] = [
     deity: 'shani',
     doha: ['जय जय श्री शनिदेव प्रभु। सुनहु दीन हमारी ॥'],
     chaupai: ['जो पढ़े शनि चालीसा होय भव तार। संकट मिटे सब दुख दूर करे ॥'],
-    isPremium: true,
   },
 ];
 

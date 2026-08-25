@@ -7,7 +7,6 @@ export interface Stotram {
   deity: DeityId;
   verses: string[];
   meaning: string;
-  isPremium?: boolean;
 }
 
 export const STOTRAMS: Stotram[] = [
@@ -44,7 +43,6 @@ export const STOTRAMS: Stotram[] = [
       'भूतकृद्भूतभृद्भावो भूतात्मा भूतभावनः ॥',
     ],
     meaning: 'The thousand names of Lord Vishnu from the Mahabharata — most powerful stotra.',
-    isPremium: true,
   },
   {
     id: 'hanuman-chalisa-opening',

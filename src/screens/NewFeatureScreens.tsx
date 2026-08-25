@@ -1,14 +1,16 @@
-import React from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import React, { useState } from 'react';
+import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
 import { Card } from '../components/Card';
 import { Colors, DEITIES, FontSize, Spacing } from '../constants/theme';
 import { useApp } from '../context/AppContext';
 import { useTranslation } from '../i18n';
 import { STOTRAMS, getStotramById } from '../data/stotrams';
-import { RINGTONES, getRingtoneById } from '../data/ringtones';
+import { PLAYABLE_RINGTONES, getRingtoneById } from '../data/ringtones';
 import { TEMPLES, getTempleById } from '../data/temples';
 import { getTodayMuhurats } from '../data/muhurat';
 import { getUpcomingFestivals } from '../data/daily';
+import { openSoundSettings, saveRingtone } from '../services/media';
 
 export function StotramListScreen() {
   const { navigate } = useApp();
@@ -21,7 +23,6 @@ export function StotramListScreen() {
         <Card key={s.id} onPress={() => navigate('stotram-detail', { id: s.id })}>
           <View style={styles.row}>
             <Text style={styles.title}>{s.titleHindi}</Text>
-            {s.isPremium && <Text style={styles.premium}>VIP</Text>}
           </View>
           <Text style={styles.sub}>{s.title}</Text>
           <Text style={styles.deity}>{DEITIES.find((d) => d.id === s.deity)?.emoji}</Text>
@@ -32,20 +33,10 @@ export function StotramListScreen() {
 }
 
 export function StotramDetailScreen() {
-  const { nav, isPremium, navigate } = useApp();
+  const { nav } = useApp();
   const stotram = nav.params?.id ? getStotramById(nav.params.id) : undefined;
 
   if (!stotram) return <Text style={styles.notFound}>Not found</Text>;
-  if (stotram.isPremium && !isPremium) {
-    return (
-      <View style={styles.locked}>
-        <Text style={styles.lockedText}>🔒 VIP Stotram</Text>
-        <Pressable style={styles.upgrade} onPress={() => navigate('premium')}>
-          <Text style={styles.upgradeText}>Upgrade</Text>
-        </Pressable>
-      </View>
-    );
-  }
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
@@ -63,48 +54,87 @@ export function StotramDetailScreen() {
 }
 
 export function RingtoneListScreen() {
-  const { navigate, addPunya } = useApp();
+  const { navigate } = useApp();
   const { t } = useTranslation();
+
+  // PLAYABLE_RINGTONES only contains entries whose MP3 actually ships, so this
+  // list can never render a play button that does nothing.
+  if (PLAYABLE_RINGTONES.length === 0) {
+    return (
+      <View style={styles.emptyWrap}>
+        <Text style={styles.emptyEmoji}>🔔</Text>
+        <Text style={styles.emptyTitle}>{t('unavailable')}</Text>
+        <Text style={styles.emptyBody}>{t('spiritualRingtones')}</Text>
+      </View>
+    );
+  }
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <Text style={styles.pageHint}>🔔 {t('spiritualRingtones')}</Text>
-      {RINGTONES.map((r) => (
+      {PLAYABLE_RINGTONES.map((r) => (
         <Card key={r.id} onPress={() => navigate('ringtone-detail', { id: r.id })}>
           <View style={styles.row}>
             <Text style={styles.title}>{r.titleHindi}</Text>
             <Text style={styles.duration}>{r.duration}</Text>
           </View>
           <Text style={styles.sub}>{r.title}</Text>
-          <Pressable
-            style={styles.playBtn}
-            onPress={() => addPunya(2)}
-          >
-            <Text style={styles.playText}>▶ {t('listen')}</Text>
-          </Pressable>
         </Card>
       ))}
-      <Text style={styles.note}>{t('comingSoon')}: MP3 playback via expo-av</Text>
     </ScrollView>
   );
 }
 
 export function RingtoneDetailScreen() {
-  const { nav, isPremium, navigate, addPunya } = useApp();
+  const { nav, addPunya } = useApp();
   const { t } = useTranslation();
   const ringtone = nav.params?.id ? getRingtoneById(nav.params.id) : undefined;
+  const [saving, setSaving] = useState(false);
+
+  // Hooks must run unconditionally, so the player is created before the
+  // not-found guard below. A null source is valid and simply plays nothing.
+  const player = useAudioPlayer(ringtone?.file ?? null);
+  const status = useAudioPlayerStatus(player);
 
   if (!ringtone) return <Text style={styles.notFound}>Not found</Text>;
-  if (ringtone.isPremium && !isPremium) {
-    return (
-      <View style={styles.locked}>
-        <Text style={styles.lockedText}>🔒 VIP Ringtone</Text>
-        <Pressable style={styles.upgrade} onPress={() => navigate('premium')}>
-          <Text style={styles.upgradeText}>Upgrade</Text>
-        </Pressable>
-      </View>
-    );
-  }
+
+  const togglePlayback = () => {
+    if (status.playing) {
+      player.pause();
+      return;
+    }
+    // Restart from the beginning once a short clip has run to the end.
+    if (status.didJustFinish || status.currentTime >= status.duration) {
+      player.seekTo(0);
+    }
+    player.play();
+    addPunya(2);
+  };
+
+  const handleSave = async () => {
+    if (!ringtone.file) return;
+    setSaving(true);
+    const result = await saveRingtone(ringtone.file, `${ringtone.id}.mp3`);
+    setSaving(false);
+
+    if (!result.ok) {
+      Alert.alert(
+        t('saveFailed'),
+        result.reason === 'permission'
+          ? 'Storage permission is needed to save the ringtone to your device.'
+          : 'Please try again.',
+      );
+      return;
+    }
+
+    addPunya(5);
+    Alert.alert(t('ringtoneSaved'), undefined, [
+      { text: 'OK', style: 'cancel' },
+      { text: t('openSoundSettings'), onPress: () => void openSoundSettings() },
+    ]);
+  };
+
+  const progress = status.duration > 0 ? status.currentTime / status.duration : 0;
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
@@ -114,11 +144,21 @@ export function RingtoneDetailScreen() {
         <Text style={styles.subHeader}>{ringtone.title} · {ringtone.duration}</Text>
       </View>
       <Text style={styles.desc}>{ringtone.description}</Text>
-      <Pressable style={styles.playBtnLarge} onPress={() => addPunya(3)}>
-        <Text style={styles.playTextLarge}>▶ {t('listen')}</Text>
+
+      <Pressable style={styles.playBtnLarge} onPress={togglePlayback} disabled={!status.isLoaded}>
+        <Text style={styles.playTextLarge}>
+          {!status.isLoaded ? t('loadingLabel') : status.playing ? `⏸ ${t('pause')}` : `▶ ${t('listen')}`}
+        </Text>
       </Pressable>
-      <Pressable style={styles.setBtn} onPress={() => addPunya(5)}>
-        <Text style={styles.setText}>📱 {t('setRingtone')}</Text>
+
+      <View style={styles.progressTrack}>
+        <View style={[styles.progressFill, { width: `${Math.min(progress, 1) * 100}%` }]} />
+      </View>
+
+      <Pressable style={styles.setBtn} onPress={handleSave} disabled={saving}>
+        {saving
+          ? <ActivityIndicator color={Colors.primary} />
+          : <Text style={styles.setText}>📱 {t('setRingtone')}</Text>}
       </Pressable>
     </ScrollView>
   );
@@ -210,7 +250,6 @@ export function FestivalHubScreen() {
           </Card>
         );
       })}
-      <Text style={styles.note}>Festival packs: wallpapers, aartis, special mantras — updated seasonally</Text>
     </ScrollView>
   );
 }
@@ -223,7 +262,6 @@ const styles = StyleSheet.create({
   title: { fontSize: FontSize.md, fontWeight: '700', color: Colors.text },
   sub: { fontSize: FontSize.sm, color: Colors.textSecondary, marginTop: 2 },
   deity: { fontSize: 20, marginTop: Spacing.xs },
-  premium: { fontSize: FontSize.xs, color: Colors.premium, fontWeight: '800' },
   header: { fontSize: FontSize.xl, fontWeight: '800', color: Colors.secondary, marginBottom: Spacing.xs },
   subHeader: { fontSize: FontSize.md, color: Colors.textSecondary, marginBottom: Spacing.lg },
   verse: { fontSize: FontSize.md, color: Colors.text, lineHeight: 28, marginBottom: Spacing.sm, textAlign: 'center' },
@@ -231,11 +269,17 @@ const styles = StyleSheet.create({
   meaningLabel: { fontSize: FontSize.sm, fontWeight: '700', color: Colors.primary, marginBottom: Spacing.xs },
   meaning: { fontSize: FontSize.sm, color: Colors.text, lineHeight: 22 },
   duration: { fontSize: FontSize.sm, color: Colors.textSecondary },
-  playBtn: { marginTop: Spacing.sm, backgroundColor: Colors.primary, paddingVertical: 6, paddingHorizontal: Spacing.md, borderRadius: 8, alignSelf: 'flex-start' },
-  playText: { color: Colors.textLight, fontWeight: '700', fontSize: FontSize.sm },
   playBtnLarge: { backgroundColor: Colors.primary, padding: Spacing.md, borderRadius: 12, alignItems: 'center', marginTop: Spacing.lg },
   playTextLarge: { color: Colors.textLight, fontWeight: '800', fontSize: FontSize.lg },
-  setBtn: { marginTop: Spacing.sm, padding: Spacing.md, borderRadius: 12, alignItems: 'center', borderWidth: 2, borderColor: Colors.primary },
+  progressTrack: {
+    height: 4,
+    backgroundColor: Colors.border,
+    borderRadius: 2,
+    marginTop: Spacing.sm,
+    overflow: 'hidden',
+  },
+  progressFill: { height: 4, backgroundColor: Colors.primary },
+  setBtn: { marginTop: Spacing.md, padding: Spacing.md, borderRadius: 12, alignItems: 'center', borderWidth: 2, borderColor: Colors.primary },
   setText: { color: Colors.primary, fontWeight: '700' },
   ringHero: { alignItems: 'center', marginBottom: Spacing.lg },
   ringEmoji: { fontSize: 56 },
@@ -254,10 +298,9 @@ const styles = StyleSheet.create({
   festivalEmoji: { fontSize: 32, marginBottom: Spacing.xs },
   pujaBtn: { marginTop: Spacing.md, backgroundColor: Colors.primary, padding: Spacing.sm, borderRadius: 10, alignItems: 'center' },
   pujaBtnText: { color: Colors.textLight, fontWeight: '700' },
-  note: { fontSize: FontSize.xs, color: Colors.textSecondary, textAlign: 'center', marginTop: Spacing.lg },
   notFound: { padding: Spacing.lg, textAlign: 'center' },
-  locked: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: Spacing.lg },
-  lockedText: { fontSize: FontSize.lg },
-  upgrade: { marginTop: Spacing.lg, backgroundColor: Colors.premium, padding: Spacing.md, borderRadius: 10 },
-  upgradeText: { color: Colors.textLight, fontWeight: '700' },
+  emptyWrap: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: Spacing.lg, backgroundColor: Colors.background },
+  emptyEmoji: { fontSize: 48, marginBottom: Spacing.md },
+  emptyTitle: { fontSize: FontSize.lg, fontWeight: '700', color: Colors.text },
+  emptyBody: { fontSize: FontSize.sm, color: Colors.textSecondary, marginTop: Spacing.xs, textAlign: 'center' },
 });

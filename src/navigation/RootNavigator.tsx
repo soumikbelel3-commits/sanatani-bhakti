@@ -1,8 +1,11 @@
-import React, { useState } from 'react';
-import { ActivityIndicator, SafeAreaView, StyleSheet, View } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, BackHandler, StyleSheet, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Header } from '../components/Header';
 import { TabBar } from '../components/TabBar';
+import { AdBanner } from '../ads/AdBanner';
+import { noteScreenOpen, useAppInterstitial } from '../ads/useAppInterstitial';
 import { Colors } from '../constants/theme';
 import { useApp } from '../context/AppContext';
 import { useTranslation } from '../i18n';
@@ -39,6 +42,53 @@ import {
 import { LanguageOnboardingScreen, LanguageSettingsScreen } from '../screens/LanguageScreen';
 
 const TAB_SCREENS: TabId[] = ['home', 'explore', 'jaap', 'mandir', 'profile'];
+
+/**
+ * Screens permitted to show a banner — an allowlist, so anything new is
+ * ad-free until someone deliberately opts it in.
+ *
+ * Excluded on purpose:
+ *  - `jaap`    — a 220px target tapped up to 1008 times in a row. A nearby ad
+ *                produces accidental clicks, which AdMob treats as invalid
+ *                traffic and permanently bans accounts for.
+ *  - `mandir`  — full-bleed dark worship UI; an ad breaks it visually.
+ *  - `premium` / `profile` — never advertise on top of the purchase flow.
+ *  - prayer-text detail screens (aarti, chalisa, bhajan, stotram, scripture,
+ *    mantra) — nobody should read a chalisa with an ad beside it.
+ */
+const BANNER_SCREENS: ReadonlySet<ScreenName> = new Set<ScreenName>([
+  'home',
+  'explore',
+  'aarti-list',
+  'chalisa-list',
+  'bhajan-list',
+  'stotram-list',
+  'puja-list',
+  'scripture-list',
+  'temple-list',
+  'temple-detail',
+  'ringtone-list',
+  'rashifal',
+  'knowledge',
+  'festival-hub',
+  'muhurat',
+  'wallpapers',
+  'favorites',
+]);
+
+/**
+ * Screens that must never trigger an interstitial on open, and do not count
+ * toward the pacing counter.
+ *
+ * Interrupting someone on their way to the purchase screen costs a sale and
+ * reads as extortion ("pay to make this stop"). Language settings is excluded
+ * because it is a recovery flow — a user who cannot read the UI is the last
+ * person who should hit a full-screen ad.
+ */
+const NO_INTERSTITIAL_SCREENS: ReadonlySet<ScreenName> = new Set<ScreenName>([
+  'premium',
+  'language-settings',
+]);
 
 function renderScreen(screen: ScreenName) {
   switch (screen) {
@@ -83,9 +133,49 @@ function LanguageSettingsWrapper() {
 }
 
 export function RootNavigator() {
-  const { nav, navigate, language, setLanguage, onboardingDone, completeOnboarding, isReady } = useApp();
+  const {
+    nav, navigate, language, setLanguage, onboardingDone,
+    completeOnboarding, isReady, canGoBack, goBack,
+  } = useApp();
   const { t } = useTranslation();
   const [pendingLang, setPendingLang] = useState(language);
+  const { maybeShow } = useAppInterstitial();
+
+  // Held in a ref so the screen-change effect below depends on the screen
+  // alone. Depending on `maybeShow` directly would re-run it whenever the ad
+  // finished loading, which could show two interstitials for one navigation.
+  const maybeShowRef = useRef(maybeShow);
+  maybeShowRef.current = maybeShow;
+
+  const screen = nav.screen;
+
+  // Android hardware back button. Without this, Back quits the app from any
+  // depth instead of returning to the previous screen.
+  useEffect(() => {
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      if (canGoBack) {
+        goBack();
+        return true; // handled — do not exit
+      }
+      // Selecting a tab resets the stack, so a secondary tab has nothing to go
+      // back to. Android users expect Back to return them to Home there rather
+      // than quit, and only to exit from Home itself.
+      if (screen !== 'home') {
+        navigate('home');
+        return true;
+      }
+      return false; // at Home, let Android close the app
+    });
+    return () => sub.remove();
+  }, [canGoBack, goBack, screen, navigate]);
+
+  // Count non-tab screen opens and let the interstitial pacing decide.
+  useEffect(() => {
+    if (TAB_SCREENS.includes(screen as TabId)) return;
+    if (NO_INTERSTITIAL_SCREENS.has(screen)) return;
+    noteScreenOpen();
+    maybeShowRef.current();
+  }, [screen]);
 
   if (!isReady) {
     return (
@@ -97,7 +187,7 @@ export function RootNavigator() {
 
   if (!onboardingDone) {
     return (
-      <SafeAreaView style={styles.safe}>
+      <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
         <StatusBar style="light" />
         <LanguageOnboardingScreen
           selected={pendingLang}
@@ -111,8 +201,9 @@ export function RootNavigator() {
     );
   }
 
-  const isTab = TAB_SCREENS.includes(nav.screen as TabId);
+  const isTab = TAB_SCREENS.includes(screen as TabId);
   const showBack = !isTab;
+  const isMandir = screen === 'mandir';
 
   const SCREEN_TITLES: Partial<Record<ScreenName, string>> = {
     home: t('appName'),
@@ -135,7 +226,7 @@ export function RootNavigator() {
     'daily-status': t('dailyStatus'),
     rashifal: t('rashifal'),
     knowledge: t('knowledge'),
-    premium: 'VIP',
+    premium: t('removeAds'),
     favorites: t('myFavorites'),
     'stotram-list': t('stotrams'),
     'stotram-detail': t('stotrams'),
@@ -148,25 +239,31 @@ export function RootNavigator() {
     'language-settings': t('changeLanguage'),
   };
 
-  const title = SCREEN_TITLES[nav.screen] ?? t('appName');
-  const activeTab: TabId = isTab ? (nav.screen as TabId) : 'home';
+  const title = SCREEN_TITLES[screen] ?? t('appName');
+  const activeTab: TabId = isTab ? (screen as TabId) : 'home';
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <SafeAreaView
+      style={[styles.safe, isMandir && styles.safeMandir]}
+      edges={['top', 'bottom']}
+    >
       <StatusBar style="light" />
-      {nav.screen !== 'mandir' && (
-        <Header title={title} showBack={showBack} />
-      )}
-      <View style={styles.body}>
-        {renderScreen(nav.screen)}
+      {!isMandir && <Header title={title} showBack={showBack} />}
+      <View style={[styles.body, isMandir && styles.bodyMandir]}>
+        {renderScreen(screen)}
       </View>
+      {BANNER_SCREENS.has(screen) && <AdBanner />}
       {isTab && <TabBar active={activeTab} onTab={(tab) => navigate(tab)} />}
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  // The safe area's own background fills the status-bar strip under
+  // edge-to-edge, so it has to match whatever sits directly beneath it.
   safe: { flex: 1, backgroundColor: Colors.primary },
+  safeMandir: { backgroundColor: '#1A0A00' },
   body: { flex: 1, backgroundColor: Colors.background },
+  bodyMandir: { backgroundColor: '#1A0A00' },
   loading: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.background },
 });

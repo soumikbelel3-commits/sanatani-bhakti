@@ -3,11 +3,25 @@
   "version": "1.0.0",
   "main": "index.ts",
   "dependencies": {
-    "expo": "~56.0.12",
+    "@react-native-async-storage/async-storage": "2.2.0",
+    "expo": "~56.0.20",
+    "expo-asset": "~56.0.23",
+    "expo-audio": "~56.0.13",
+    "expo-build-properties": "~56.0.26",
+    "expo-constants": "~56.0.24",
+    "expo-file-system": "~56.0.10",
+    "expo-iap": "^5.3.2",
+    "expo-intent-launcher": "~56.0.4",
+    "expo-linear-gradient": "~56.0.4",
+    "expo-media-library": "~56.0.11",
+    "expo-splash-screen": "~56.0.14",
     "expo-status-bar": "~56.0.4",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-native": "0.85.3",
+    "react-native-google-mobile-ads": "^16.5.0",
+    "react-native-safe-area-context": "~5.7.0",
+    "react-native-view-shot": "5.1.0",
     "react-native-web": "^0.21.2"
   },
   "devDependencies": {
@@ -17,11 +31,15 @@
   "scripts": {
     "start": "expo start",
     "dev": "expo start --web --port 8082",
-    "preview": "npx serve dist-web -p 3000",
     "build:web": "expo export --platform web --output-dir dist-web",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web --port 8082"
+    "web": "expo start --web --port 8082",
+    "typecheck": "tsc --noEmit",
+    "doctor": "expo-doctor",
+    "build:android:preview": "eas build --profile preview --platform android",
+    "build:android:prod": "eas build --profile production --platform android",
+    "submit:android": "eas submit --platform android --profile production"
   },
   "private": true
 }

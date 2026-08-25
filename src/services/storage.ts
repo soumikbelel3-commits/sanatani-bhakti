@@ -1,31 +1,42 @@
-const memoryStore: Record<string, string> = {};
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-function hasLocalStorage(): boolean {
-  try {
-    return typeof globalThis !== 'undefined' && 'localStorage' in globalThis;
-  } catch {
-    return false;
-  }
-}
-
+/**
+ * Persistent key-value storage.
+ *
+ * Backed by AsyncStorage, which uses SQLite on Android, the native key-value
+ * store on iOS, and localStorage on web — so a single implementation persists
+ * correctly on every platform the app ships to.
+ */
 export const Storage = {
   async getItem(key: string): Promise<string | null> {
-    if (hasLocalStorage()) {
-      return globalThis.localStorage.getItem(key);
+    try {
+      return await AsyncStorage.getItem(key);
+    } catch {
+      return null;
     }
-    return memoryStore[key] ?? null;
   },
   async setItem(key: string, value: string): Promise<void> {
-    if (hasLocalStorage()) {
-      globalThis.localStorage.setItem(key, value);
+    try {
+      await AsyncStorage.setItem(key, value);
+    } catch {
+      // A failed write must never crash a devotional flow mid-prayer.
     }
-    memoryStore[key] = value;
   },
   async removeItem(key: string): Promise<void> {
-    if (hasLocalStorage()) {
-      globalThis.localStorage.removeItem(key);
+    try {
+      await AsyncStorage.removeItem(key);
+    } catch {
+      // Ignore — see setItem.
     }
-    delete memoryStore[key];
+  },
+  /** Reads many keys in one native round-trip. Used on cold start. */
+  async multiGet(keys: readonly string[]): Promise<Record<string, string | null>> {
+    try {
+      const pairs = await AsyncStorage.multiGet(keys as string[]);
+      return Object.fromEntries(pairs);
+    } catch {
+      return Object.fromEntries(keys.map((k) => [k, null]));
+    }
   },
 };
 
@@ -40,4 +51,5 @@ export const STORAGE_KEYS = {
   USER_NAME: '@sanatani/userName',
   LANGUAGE: '@sanatani/language',
   ONBOARDING_DONE: '@sanatani/onboardingDone',
+  ADS_REMOVED: '@sanatani/adsRemoved',
 } as const;

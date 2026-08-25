@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Colors, FontSize, Spacing } from '../constants/theme';
 import { useApp } from '../context/AppContext';
 import { useTranslation } from '../i18n';
+import { useAppInterstitial } from '../ads/useAppInterstitial';
 import { vibrate } from '../utils/vibrate';
 
 const TARGETS = [108, 1008];
@@ -10,6 +11,7 @@ const TARGETS = [108, 1008];
 export function JaapScreen() {
   const { addJaap, jaapTotal } = useApp();
   const { t } = useTranslation();
+  const { maybeShow } = useAppInterstitial();
   const [count, setCount] = useState(0);
   const [target, setTarget] = useState(108);
   const [completed, setCompleted] = useState(false);
@@ -23,12 +25,27 @@ export function JaapScreen() {
       setCompleted(true);
       addJaap(target);
       vibrate([0, 100, 50, 100]);
+      // Completing a mala is the one natural pause in this screen, so it is the
+      // only place an interstitial is allowed. Delayed so the user sees their
+      // completion first, and never attached to the tap target itself —
+      // accidental clicks on a counter are exactly what gets AdMob accounts
+      // banned for invalid traffic.
+      setTimeout(() => maybeShow({ force: true }), 1200);
     }
   };
 
   const reset = () => {
     setCount(0);
     setCompleted(false);
+  };
+
+  /**
+   * Banks a partial mala. Completing the target already banked it via
+   * `increment`, so saving again would double-count the user's jaap total.
+   */
+  const saveProgress = () => {
+    if (!completed && count > 0) addJaap(count);
+    reset();
   };
 
   const progress = Math.min(count / target, 1);
@@ -39,13 +56,13 @@ export function JaapScreen() {
       <Text style={styles.subtitle}>{t('totalJaaps')}: {jaapTotal.toLocaleString()}</Text>
 
       <View style={styles.targetRow}>
-        {TARGETS.map((t) => (
+        {TARGETS.map((value) => (
           <Pressable
-            key={t}
-            style={[styles.targetBtn, target === t && styles.targetActive]}
-            onPress={() => { setTarget(t); reset(); }}
+            key={value}
+            style={[styles.targetBtn, target === value && styles.targetActive]}
+            onPress={() => { setTarget(value); reset(); }}
           >
-            <Text style={[styles.targetText, target === t && styles.targetTextActive]}>{t}</Text>
+            <Text style={[styles.targetText, target === value && styles.targetTextActive]}>{value}</Text>
           </Pressable>
         ))}
       </View>
@@ -63,7 +80,7 @@ export function JaapScreen() {
         <Pressable style={styles.secondaryBtn} onPress={reset}>
           <Text style={styles.secondaryText}>{t('reset')}</Text>
         </Pressable>
-        <Pressable style={styles.primaryBtn} onPress={() => { addJaap(count); reset(); }}>
+        <Pressable style={styles.primaryBtn} onPress={saveProgress}>
           <Text style={styles.primaryText}>Save & Earn Punya</Text>
         </Pressable>
       </View>

@@ -110,7 +110,6 @@ export const MANTRAS: Mantra[] = [
     meaning: 'Salutations to Goddess Saraswati, goddess of knowledge.',
     meaningHindi: 'ज्ञान की देवी माता सरस्वती को नमन।',
     benefits: 'Knowledge, wisdom, success in education.',
-    isPremium: true,
   },
   {
     id: 'shani',
@@ -122,7 +121,6 @@ export const MANTRAS: Mantra[] = [
     meaning: 'Salutations to Lord Shani, who teaches patience and discipline.',
     meaningHindi: 'धैर्य और अनुशासन सिखाने वाले शनि देव को नमन।',
     benefits: 'Relief from Shani dosha, patience, discipline.',
-    isPremium: true,
   },
   {
     id: 'vishnu-sahasranama-opening',
@@ -134,7 +132,6 @@ export const MANTRAS: Mantra[] = [
     meaning: 'Meditate on Vishnu who removes all obstacles.',
     meaningHindi: 'सभी विघ्नों को दूर करने वाले विष्णु का ध्यान करें।',
     benefits: 'Removal of obstacles, divine blessings.',
-    isPremium: true,
   },
 ];
 

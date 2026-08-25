@@ -8,6 +8,7 @@ import { AARTIS } from '../data/aartis';
 import { BHAJANS } from '../data/bhajans';
 import { CHALISAS } from '../data/chalisas';
 import { MANTRAS } from '../data/mantras';
+import { HAS_RINGTONES } from '../data/ringtones';
 
 type ExploreTab = 'mantras' | 'aarti' | 'chalisa' | 'bhajan';
 
@@ -60,10 +61,7 @@ export function ExploreScreen() {
 
       {tab === 'mantras' && filter(MANTRAS).map((m) => (
         <Card key={m.id} onPress={() => navigate('mantra-detail', { id: m.id })}>
-          <View style={styles.row}>
-            <Text style={styles.itemTitle}>{m.titleHindi}</Text>
-            {m.isPremium && <Text style={styles.premium}>PRO</Text>}
-          </View>
+          <Text style={styles.itemTitle}>{m.titleHindi}</Text>
           <Text style={styles.itemSub}>{m.title}</Text>
           <Text style={styles.preview} numberOfLines={1}>{m.sanskrit}</Text>
         </Card>
@@ -78,10 +76,7 @@ export function ExploreScreen() {
 
       {tab === 'chalisa' && filter(CHALISAS).map((c) => (
         <Card key={c.id} onPress={() => navigate('chalisa-detail', { id: c.id })}>
-          <View style={styles.row}>
-            <Text style={styles.itemTitle}>{c.title}</Text>
-            {c.isPremium && <Text style={styles.premium}>PRO</Text>}
-          </View>
+          <Text style={styles.itemTitle}>{c.title}</Text>
         </Card>
       ))}
 
@@ -98,7 +93,7 @@ export function ExploreScreen() {
       <Card onPress={() => navigate('scripture-list')}><Text style={styles.itemTitle}>📚 {t('scriptures')}</Text></Card>
       <Card onPress={() => navigate('wallpapers')}><Text style={styles.itemTitle}>🖼️ {t('wallpapers')}</Text></Card>
       <Card onPress={() => navigate('rashifal')}><Text style={styles.itemTitle}>✨ {t('rashifal')}</Text></Card>
-      <Card onPress={() => navigate('ringtone-list')}><Text style={styles.itemTitle}>🔔 {t('ringtones')}</Text></Card>
+      {HAS_RINGTONES && <Card onPress={() => navigate('ringtone-list')}><Text style={styles.itemTitle}>🔔 {t('ringtones')}</Text></Card>}
       <Card onPress={() => navigate('temple-list')}><Text style={styles.itemTitle}>🛕 {t('temples')}</Text></Card>
       <Card onPress={() => navigate('muhurat')}><Text style={styles.itemTitle}>⏰ {t('muhurat')}</Text></Card>
       <Card onPress={() => navigate('festival-hub')}><Text style={styles.itemTitle}>🎉 {t('festivalHub')}</Text></Card>
@@ -120,9 +115,7 @@ const styles = StyleSheet.create({
   filterChip: { paddingHorizontal: Spacing.sm, paddingVertical: 6, borderRadius: 16, backgroundColor: Colors.surface, marginRight: Spacing.xs, borderWidth: 1, borderColor: Colors.border },
   filterActive: { backgroundColor: Colors.surfaceAlt, borderColor: Colors.primary },
   filterText: { fontSize: FontSize.xs, color: Colors.text },
-  row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   itemTitle: { fontSize: FontSize.md, fontWeight: '700', color: Colors.text },
   itemSub: { fontSize: FontSize.sm, color: Colors.textSecondary, marginTop: 2 },
   preview: { fontSize: FontSize.sm, color: Colors.textSecondary, marginTop: Spacing.xs },
-  premium: { fontSize: FontSize.xs, color: Colors.premium, fontWeight: '800', backgroundColor: '#F3E5F5', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
 });

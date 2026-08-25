@@ -26,21 +26,18 @@ export const SCRIPTURES: Scripture[] = [
     title: 'Vishnu Sahasranama',
     category: 'stotra',
     excerpt: 'विश्वं विष्णुर्वषट्कारो भूतभव्यभवत्प्रभुः। भूतकृद्भूतभृद्भावो भूतात्मा भूतभावनः॥\n\nThe thousand names of Lord Vishnu — recited for peace and prosperity.',
-    isPremium: true,
   },
   {
     id: 'shiv-purana-excerpt',
     title: 'Shiv Purana — Excerpt',
     category: 'puran',
     excerpt: 'शिवः शक्त्या युक्तो यदि भवति शक्तः प्रभवितुं न चेदेवं देवो न खलु कुशलः स्पन्दितुमपि।\n\nShiva united with Shakti is able to manifest. Without Shakti, even Shiva cannot act.',
-    isPremium: true,
   },
   {
     id: 'satyanarayan-katha',
     title: 'Satyanarayan Katha',
     category: 'katha',
     excerpt: 'Once upon a time, Lord Narayan instructed Narad Muni about the glory of Satyanarayan vrata for welfare of humanity in Kali Yuga...',
-    isPremium: true,
   },
 ];
 

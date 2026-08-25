@@ -10,11 +10,17 @@ interface AppContextValue {
   nav: NavigationState;
   navigate: (screen: ScreenName, params?: Record<string, string>) => void;
   goBack: () => void;
+  /** True when the nav stack has somewhere to return to. Drives the Android back button. */
+  canGoBack: boolean;
   punyaPoints: number;
   addPunya: (points: number, reason?: string) => void;
   streak: number;
-  isPremium: boolean;
-  setPremium: (v: boolean) => void;
+  /**
+   * Whether the user has bought the one-time "Remove Ads" product.
+   * This controls ads ONLY — every piece of devotional content is free.
+   */
+  adsRemoved: boolean;
+  setAdsRemoved: (v: boolean) => void;
   favorites: string[];
   toggleFavorite: (id: string) => void;
   selectedRashi: number;
@@ -36,11 +42,21 @@ interface AppContextValue {
 
 const AppContext = createContext<AppContextValue | null>(null);
 
+/** Computes the streak for today from the last-active date, without touching state. */
+function nextStreak(lastActive: string | null, storedStreak: number): number | null {
+  const today = new Date().toDateString();
+  if (lastActive === today) return null; // already counted today
+
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  return lastActive === yesterday.toDateString() ? storedStreak + 1 : 1;
+}
+
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [navStack, setNavStack] = useState<NavigationState[]>([{ screen: 'home' }]);
   const [punyaPoints, setPunyaPoints] = useState(0);
   const [streak, setStreak] = useState(0);
-  const [isPremium, setIsPremium] = useState(false);
+  const [adsRemoved, setAdsRemovedState] = useState(false);
   const [favorites, setFavorites] = useState<string[]>([]);
   const [selectedRashi, setSelectedRashiState] = useState(0);
   const [jaapTotal, setJaapTotal] = useState(0);
@@ -55,43 +71,36 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     (async () => {
-      const [p, s, f, prem, rashi, jaap, name, lang, onboard] = await Promise.all([
-        Storage.getItem(STORAGE_KEYS.PUNYA_POINTS),
-        Storage.getItem(STORAGE_KEYS.STREAK),
-        Storage.getItem(STORAGE_KEYS.FAVORITES),
-        Storage.getItem(STORAGE_KEYS.IS_PREMIUM),
-        Storage.getItem(STORAGE_KEYS.SELECTED_RASHI),
-        Storage.getItem(STORAGE_KEYS.JAAP_TOTAL),
-        Storage.getItem(STORAGE_KEYS.USER_NAME),
-        Storage.getItem(STORAGE_KEYS.LANGUAGE),
-        Storage.getItem(STORAGE_KEYS.ONBOARDING_DONE),
-      ]);
-      if (p) setPunyaPoints(parseInt(p, 10));
-      if (s) setStreak(parseInt(s, 10));
-      if (f) setFavorites(JSON.parse(f));
-      if (prem === 'true') setIsPremium(true);
-      if (rashi) setSelectedRashiState(parseInt(rashi, 10));
-      if (jaap) setJaapTotal(parseInt(jaap, 10));
-      if (name) setUserNameState(name);
-      if (lang) setLanguageState(lang as LanguageCode);
-      if (onboard === 'true') setOnboardingDone(true);
-      await updateStreak();
+      const v = await Storage.multiGet(Object.values(STORAGE_KEYS));
+
+      const storedStreak = parseInt(v[STORAGE_KEYS.STREAK] || '0', 10);
+      if (v[STORAGE_KEYS.PUNYA_POINTS]) setPunyaPoints(parseInt(v[STORAGE_KEYS.PUNYA_POINTS]!, 10));
+      if (v[STORAGE_KEYS.FAVORITES]) {
+        try {
+          setFavorites(JSON.parse(v[STORAGE_KEYS.FAVORITES]!));
+        } catch {
+          setFavorites([]);
+        }
+      }
+      if (v[STORAGE_KEYS.ADS_REMOVED] === 'true') setAdsRemovedState(true);
+      if (v[STORAGE_KEYS.SELECTED_RASHI]) setSelectedRashiState(parseInt(v[STORAGE_KEYS.SELECTED_RASHI]!, 10));
+      if (v[STORAGE_KEYS.JAAP_TOTAL]) setJaapTotal(parseInt(v[STORAGE_KEYS.JAAP_TOTAL]!, 10));
+      if (v[STORAGE_KEYS.USER_NAME]) setUserNameState(v[STORAGE_KEYS.USER_NAME]!);
+      if (v[STORAGE_KEYS.LANGUAGE]) setLanguageState(v[STORAGE_KEYS.LANGUAGE] as LanguageCode);
+      if (v[STORAGE_KEYS.ONBOARDING_DONE] === 'true') setOnboardingDone(true);
+
+      const updated = nextStreak(v[STORAGE_KEYS.LAST_ACTIVE], storedStreak);
+      if (updated === null) {
+        setStreak(storedStreak);
+      } else {
+        setStreak(updated);
+        await Storage.setItem(STORAGE_KEYS.STREAK, String(updated));
+        await Storage.setItem(STORAGE_KEYS.LAST_ACTIVE, new Date().toDateString());
+      }
+
       setIsReady(true);
     })();
   }, []);
-
-  const updateStreak = async () => {
-    const last = await Storage.getItem(STORAGE_KEYS.LAST_ACTIVE);
-    const today = new Date().toDateString();
-    if (last === today) return;
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    const currentStreak = parseInt((await Storage.getItem(STORAGE_KEYS.STREAK)) || '0', 10);
-    const newStreak = last === yesterday.toDateString() ? currentStreak + 1 : 1;
-    setStreak(newStreak);
-    await Storage.setItem(STORAGE_KEYS.STREAK, String(newStreak));
-    await Storage.setItem(STORAGE_KEYS.LAST_ACTIVE, today);
-  };
 
   const navigate = useCallback((screen: ScreenName, params?: Record<string, string>) => {
     if (TAB_SCREENS.includes(screen as TabId)) {
@@ -105,7 +114,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setNavStack((prev) => (prev.length > 1 ? prev.slice(0, -1) : prev));
   }, []);
 
-  const addPunya = useCallback(async (points: number) => {
+  const addPunya = useCallback((points: number) => {
     setPunyaPoints((prev) => {
       const next = prev + points;
       Storage.setItem(STORAGE_KEYS.PUNYA_POINTS, String(next));
@@ -113,9 +122,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
-  const setPremium = useCallback(async (v: boolean) => {
-    setIsPremium(v);
-    await Storage.setItem(STORAGE_KEYS.IS_PREMIUM, String(v));
+  const setAdsRemoved = useCallback(async (v: boolean) => {
+    setAdsRemovedState(v);
+    await Storage.setItem(STORAGE_KEYS.ADS_REMOVED, String(v));
   }, []);
 
   const toggleFavorite = useCallback(async (id: string) => {
@@ -131,7 +140,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     await Storage.setItem(STORAGE_KEYS.SELECTED_RASHI, String(i));
   }, []);
 
-  const addJaap = useCallback(async (count: number) => {
+  const addJaap = useCallback((count: number) => {
     setJaapTotal((prev) => {
       const next = prev + count;
       Storage.setItem(STORAGE_KEYS.JAAP_TOTAL, String(next));
@@ -170,11 +179,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       nav,
       navigate,
       goBack,
+      canGoBack: navStack.length > 1,
       punyaPoints,
       addPunya,
       streak,
-      isPremium,
-      setPremium,
+      adsRemoved,
+      setAdsRemoved,
       favorites,
       toggleFavorite,
       selectedRashi,
@@ -194,10 +204,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       isReady,
     }),
     [
-      nav, navigate, goBack, punyaPoints, addPunya, streak, isPremium, setPremium,
-      favorites, toggleFavorite, selectedRashi, setSelectedRashi, jaapTotal, addJaap,
-      userName, setUserName, mandirFlowers, mandirDiyas, offerFlower, lightDiya,
-      language, setLanguage, onboardingDone, completeOnboarding, isReady,
+      nav, navStack.length, navigate, goBack, punyaPoints, addPunya, streak,
+      adsRemoved, setAdsRemoved, favorites, toggleFavorite, selectedRashi,
+      setSelectedRashi, jaapTotal, addJaap, userName, setUserName, mandirFlowers,
+      mandirDiyas, offerFlower, lightDiya, language, setLanguage, onboardingDone,
+      completeOnboarding, isReady,
     ],
   );
 

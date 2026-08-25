@@ -2,6 +2,7 @@ import React from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from '../i18n';
 import { Colors, DEITIES, FontSize, Spacing } from '../constants/theme';
+import { HAS_RINGTONES } from '../data/ringtones';
 import type { ScreenName } from '../types';
 
 const QUICK_ACTIONS: { id: ScreenName; labelKey: 'mantras' | 'aarti' | 'chalisa' | 'bhajan' | 'pujaVidhi' | 'rashifal' | 'dailyStatus' | 'wallpapers' | 'scriptures' | 'knowledge' | 'stotrams' | 'ringtones' | 'temples' | 'festivalHub' | 'muhurat'; emoji: string; color: string }[] = [
@@ -29,9 +30,15 @@ interface QuickActionGridProps {
 export function QuickActionGrid({ onNavigate }: QuickActionGridProps) {
   const { t } = useTranslation();
 
+  // Ringtones only appear once at least one MP3 actually ships — see
+  // assets/audio/README.md.
+  const actions = QUICK_ACTIONS.filter(
+    (item) => item.id !== 'ringtone-list' || HAS_RINGTONES,
+  );
+
   return (
     <View style={styles.grid}>
-      {QUICK_ACTIONS.map((item) => (
+      {actions.map((item) => (
         <Pressable
           key={item.id}
           style={[styles.item, { borderColor: item.color + '40' }]}

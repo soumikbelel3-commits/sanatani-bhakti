@@ -6,25 +6,13 @@ import { useApp } from '../context/AppContext';
 import { getMantraById } from '../data/mantras';
 
 export function MantraDetailScreen() {
-  const { nav, favorites, toggleFavorite, addPunya, isPremium, navigate } = useApp();
+  const { nav, favorites, toggleFavorite, addPunya, navigate } = useApp();
   const id = nav.params?.id;
   const mantra = id ? getMantraById(id) : undefined;
   const [playing, setPlaying] = useState(false);
 
   if (!mantra) {
     return <View style={styles.center}><Text>Mantra not found</Text></View>;
-  }
-
-  if (mantra.isPremium && !isPremium) {
-    return (
-      <View style={styles.center}>
-        <Text style={styles.lock}>🔒 Premium Content</Text>
-        <Text style={styles.lockSub}>{mantra.title} is available for VIP members</Text>
-        <Pressable style={styles.upgradeBtn} onPress={() => navigate('premium')}>
-          <Text style={styles.upgradeText}>Upgrade to VIP</Text>
-        </Pressable>
-      </View>
-    );
   }
 
   const isFav = favorites.includes(mantra.id);
